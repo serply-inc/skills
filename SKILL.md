@@ -166,11 +166,20 @@ not a tool error - do not retry it.
 `429` means the rate limit was hit; back off and retry. `502` means the
 upstream fetch or parse failed - it is transient and not specific to Maps
 (Page Fetch throws it too), so always retry once before reporting a failure.
-`405` on Page Fetch means you used `GET` instead of `POST`. `404` comes from
-`/v1/reddit/post/{id}` alone and means the post does not exist - it is a real
-answer, so do not retry it. Full
+`405` on Page Fetch means you used `GET` instead of `POST`. `404` means the path
+is wrong or the thing is not there, and is never worth retrying: from
+`/v1/reddit/post/{id}` it is a real answer that the post does not exist, and
+from any endpoint it also means a misspelled path or an empty query segment
+(`/v1/image/` with nothing after the slash). Full
 error-response shape: https://serply.io/docs/guides/errors.
 
 A `200` is not proof the call was well-formed: a malformed search URL returns
 `200` with an empty `results[]`. Check that the array is non-empty before
 concluding there were no results.
+
+A non-empty array is not proof either, on Image. `/v1/image/{query}` puts the
+path segment straight into the search, so `/v1/image/coffee&num=5` searches for
+the literal text `coffee&num=5` and returns a full set of unrelated pictures
+with no error. Use the `q=` form - `/v1/image/q=coffee&num=5` - whenever the
+query carries anything besides the terms themselves; that form is parsed, and
+the extra parameters are dropped rather than searched for.
