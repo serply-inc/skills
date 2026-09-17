@@ -1,0 +1,29 @@
+{
+  "name": "serply-plugins",
+  "owner": {
+    "name": "Serply",
+    "url": "https://serply.io"
+  },
+  "metadata": {
+    "description": "Official Serply plugin for Claude Code - live search results and page scraping through the Serply API and MCP server",
+    "version": "1.1.0"
+  },
+  "plugins": [
+    {
+      "name": "serply",
+      "source": "./",
+      "description": "Live Google Search, Scholar, News, Maps, Images, Jobs, Video, Bing, Amazon, eBay and Reddit results, plus URL scraping, through the Serply API and MCP server.",
+      "version": "1.1.0",
+      "author": {
+        "name": "Serply",
+        "url": "https://serply.io"
+      },
+      "homepage": "https://serply.io/docs/guides/agent-skill",
+      "repository": "https://github.com/serply-inc/skills",
+      "license": "MIT",
+      "keywords": ["search", "web-search", "serp", "google", "scholar", "news", "reddit", "scraping", "agents", "mcp"],
+      "category": "external-integrations",
+      "tags": ["web-search", "data-retrieval", "agents", "research", "scraping"]
+    }
+  ]
+}
