@@ -40,6 +40,17 @@ You also need a Serply API key, set as an environment variable and passed in
 the `X-Api-Key` header. New accounts get 2,500 free credits with no card at
 [app.serply.io/users/sign_up](https://app.serply.io/users/sign_up).
 
+## Aeon
+
+[`aeon/`](aeon) is a community skill pack for the
+[Aeon](https://github.com/aeonfun/aeon) agent framework. Its `serply-search`
+skill runs Google web or news searches and sends a cited digest through Aeon's
+`./notify`:
+
+```bash
+bin/install-skill-pack serply-inc/skills --path aeon
+```
+
 ## Verifying
 
 Every endpoint, parameter and response shape the skill describes was checked

@@ -1,0 +1,20 @@
+{
+  "name": "Serply",
+  "version": "1.0",
+  "description": "Google web and news search for Aeon through the Serply API: ranked results with titles, links, and snippets, optional country and freshness filters.",
+  "author": "serply-inc",
+  "license": "MIT",
+  "homepage": "https://serply.io",
+  "skills": [
+    {
+      "slug": "serply-search",
+      "path": "skills/serply-search",
+      "description": "Search Google web or news results through the Serply API and deliver a cited digest via ./notify.",
+      "category": "research",
+      "default_enabled": false,
+      "secrets_required": ["SERPLY_API_KEY"],
+      "secrets_optional": ["SERPLY_GL", "SERPLY_FRESHNESS", "SERPLY_NEWS"],
+      "capabilities": ["external_api", "sends_notifications"]
+    }
+  ]
+}
