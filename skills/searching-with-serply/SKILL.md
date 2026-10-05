@@ -4,7 +4,7 @@ description: Fetches live Google Search, Bing Search, Google News, Google Maps, 
 license: MIT
 metadata:
   author: serply-inc
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Searching with Serply
@@ -130,33 +130,62 @@ boxes; do not treat one as the other when doing keyword research.
 
 ## MCP server
 
-For an agent that already speaks MCP, point it at the hosted server instead
-of writing HTTP calls by hand:
+For an agent that already speaks MCP, use the hosted server at
+`https://api.serply.io/mcp` (streamable HTTP) instead of writing HTTP calls by
+hand. It is the same server as [serply-inc/mcp](https://github.com/serply-inc/mcp).
+It accepts the Serply API key either as `X-Api-Key: <key>` or as
+`Authorization: Bearer <key>`, so clients that only support bearer tokens
+work too. Keep the key in an environment variable such as `SERPLY_API_KEY`,
+not in a config file.
+
+| Client | Setup |
+|---|---|
+| Claude Code | `claude mcp add --transport http serply https://api.serply.io/mcp --header "X-Api-Key: $SERPLY_API_KEY"` |
+| Codex | `codex mcp add serply --url https://api.serply.io/mcp --bearer-token-env-var SERPLY_API_KEY` |
+| JSON-config clients (Cursor, VS Code, Gemini CLI, Windsurf) | a remote server entry with the URL above and an `X-Api-Key` header; the URL key is `url` in most clients and `httpUrl` in Gemini CLI |
+| OpenAI Responses API | an `mcp` tool with `server_url` set to the URL above and `headers: {"X-Api-Key": ...}` |
+| Anthropic Messages API (MCP connector) | an `mcp_servers` entry with the URL above and the key as `authorization_token` (sent as a bearer token) |
+
+When a client cannot reach a remote server or set a header, run the server
+locally over stdio instead. This needs only `uv`, with no clone:
 
 ```bash
-claude mcp add --transport http serply https://api.serply.io/mcp \
-  --header "X-Api-Key: YOUR_API_KEY"
+SERPLY_API_KEY=YOUR_API_KEY uvx --from git+https://github.com/serply-inc/mcp serply-mcp
 ```
 
-For clients without native remote-MCP support, bridge with `mcp-remote` in
-the client's MCP config, setting the same header.
+In a JSON-config client, that is `"command": "uvx"`, `"args": ["--from",
+"git+https://github.com/serply-inc/mcp", "serply-mcp"]`, and `SERPLY_API_KEY`
+in `env`. Stdio is the default transport.
 
-Fourteen tools, called as `serply:tool_name`:
+Fourteen tools, called as `serply:tool_name` (defaults in brackets):
 
-- `serply:google_search` - query, num, start, proxy_location, device
+- `serply:google_search` - query, num [10, max 100], start [0], proxy_location, device
 - `serply:bing_search` - query, proxy_location, device
-- `serply:google_news_search` - query, ceid, proxy_location, device
-- `serply:google_video_search` - query, num, proxy_location, device
-- `serply:google_scholar_search` - query, num, proxy_location, device
-- `serply:google_jobs_search` - query, proxy_location, device
-- `serply:google_maps_search` - query, num, hl, gl
+- `serply:google_news_search` - query, ceid (edition such as `US:en` or `GB:en`), proxy_location, device
+- `serply:google_video_search` - query, num [10], proxy_location, device
+- `serply:google_scholar_search` - query, num [10], proxy_location, device
+- `serply:google_jobs_search` - query, proxy_location, device (North American listings only)
+- `serply:google_maps_search` - query, num [20, max 200], hl [`en`], gl
 - `serply:amazon_product_search` - query, proxy_location, device
-- `serply:scrape_url` - url, response_type
-- `serply:reddit_subreddit_posts` - subreddit, limit, sort, t, after
+- `serply:scrape_url` - url, response_type [`markdown`; or `full` for raw HTML]
+- `serply:reddit_subreddit_posts` - subreddit, limit [25], sort [`hot`], t, after
 - `serply:reddit_subreddit_about` - subreddit
-- `serply:reddit_user_posts` - username, limit, sort, t, after
-- `serply:reddit_post` - post_id, with_comments, sort, max_depth
-- `serply:reddit_post_comments` - post_id, sort, max_depth
+- `serply:reddit_user_posts` - username, limit [25], sort [`new`], t, after
+- `serply:reddit_post` - post_id, with_comments [false], sort, max_depth [3, max 10]
+- `serply:reddit_post_comments` - post_id, sort [`confidence`], max_depth [3, max 10]
+
+`proxy_location` is one of `US` (default), `EU`, `CA`, `IE`, `GB`, `FR`,
+`DE`, `SE`, `IN`, `JP`, `KR`, `SG`, `AU`, or `BR`; use `GB`, not `UK`.
+`device` is `desktop` (default) or `mobile`. Reddit listing sorts are `hot`,
+`new`, `top`, `rising`, and `controversial` (user history has no `rising`);
+comment sorts are `confidence` (Reddit's "best"), `top`, `new`,
+`controversial`, `old`, and `qa`. `t` is `hour`, `day`, `week`, `month`,
+`year`, or `all`, and applies only to `top` and `controversial`. To page,
+pass the "Next page" cursor from the previous result as `after`.
+
+Note that `scrape_url` defaults to markdown, while the REST Page Fetch
+endpoint defaults to raw HTML. There is no MCP tool for Google Images or eBay;
+use the REST endpoints for those.
 
 Everything except `google_maps_search` returns rendered markdown rather than
 JSON - readable as-is, no parsing step. Maps returns a structured object with

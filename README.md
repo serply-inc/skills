@@ -36,6 +36,15 @@ mkdir -p .claude/skills/searching-with-serply
 curl -o .claude/skills/searching-with-serply/SKILL.md https://serply.io/skill.md
 ```
 
+For Codex and other agents that read the shared `.agents/skills` directory,
+use `~/.agents/skills/searching-with-serply/` (personal) or
+`.agents/skills/searching-with-serply/` (project) instead. An agent with no
+skill support can read the same file as plain instructions.
+
+The skill also shows how to connect the hosted MCP server from Claude Code,
+Codex, JSON-config clients, the OpenAI Responses API, and the Anthropic
+Messages API, or run it locally over stdio with `uvx`.
+
 You also need a Serply API key, set as an environment variable and passed in
 the `X-Api-Key` header. New accounts get 2,500 free credits with no card at
 [app.serply.io/users/sign_up](https://app.serply.io/users/sign_up).
