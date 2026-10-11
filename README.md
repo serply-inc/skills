@@ -29,6 +29,19 @@ claude plugin marketplace add serply-inc/skills
 claude plugin install serply@serply-plugins
 ```
 
+As a Codex plugin, which also registers the hosted Serply MCP server:
+
+```bash
+export SERPLY_API_KEY=your_key
+codex plugin marketplace add serply-inc/skills
+codex plugin add serply@serply-plugins
+```
+
+The Codex plugin bundles its own `serply-mcp` skill
+([`codex/skills/serply-mcp`](codex/skills/serply-mcp/SKILL.md)) that routes each
+request to the right MCP tool. Codex reads the key from `SERPLY_API_KEY` at
+runtime ([`codex.mcp.json`](codex.mcp.json)); it is never written to disk.
+
 Or copy the file by hand:
 
 ```bash
