@@ -45,7 +45,7 @@ both take their options as query params (see below).
 
 | Endpoint | Path | Returns |
 |---|---|---|
-| Google Search | `/v1/search` | `results[]`, `answers[]`, `related_searches` |
+| Google Search | `/v1/search` | `results[]`, `answers[]`, `ai_overview`, `ads[]`, `related_questions`, `related_searches` |
 | Google News | `/v1/news` | `feed.entries[]`, `entities[]`; add `&resolve_links=true` for publisher URLs instead of `news.google.com` redirects |
 | Google Maps | `/v1/maps/search/{query}` | `places[]` with lat/long, rating |
 | Google Images | `/v1/image` | `image_results[]` with `image.src`, `link`, `original_image` |
@@ -122,11 +122,25 @@ scripts, and boilerplate that would otherwise dominate the tokens. Note that
 markdown output escapes literal periods in decimals (`29\.1`), so strip
 backslashes before substring-matching a number in the response.
 
-**Gotcha:** `related_questions` (Google's "People also ask" box) is frequently
-returned empty even on question-shaped queries. What usually populates instead
-is `related_searches.text[]`, whose entries carry `result_type:
-"people_also_search"` - Google's "People also search for". They are different
+**Gotcha:** `related_questions` (Google's "People also ask" box) is filled
+only when Google's page includes that box, and the page layout Serply fetches
+often does not, so expect it empty on many queries. What usually populates
+instead is `related_searches.text[]`, whose entries carry `result_type:
+"people_also_search"` - Google's "People also search for" - with a clean
+`link` such as `https://www.google.com/search?q=...`. They are different
 boxes; do not treat one as the other when doing keyword research.
+
+**Google AI Overview** arrives under `ai_overview` (absent or `null` when the
+page has none). The answer text is `ai_overview.metadata.text`, and
+`metadata.truncated` is `true` when Google cut it short. Each entry of
+`metadata.sources[]` has `position`, `title`, `url` (the cited page, not a
+Google redirect), `domain` and `source` (the site name); one domain can be
+cited more than once. Use `sources[].domain` to check whether a site is cited.
+
+**Ads** in `ads[]` link to the advertiser: `link` is the landing page and
+`metadata.domain` its domain. Google's click URL is kept separately in
+`metadata.tracking_url`; do not open it, since that registers a paid click.
+Ad sitelinks carry only `title` and `tracking_url` (`url` is `null`).
 
 ## MCP server
 
