@@ -57,6 +57,7 @@ both take their options as query params (see below).
 | eBay Search | `/v1/ebay/search` | `results[]` with title, link, price |
 | Reddit | `/v1/reddit/...` | Reddit's own listing JSON - see below |
 | Page Fetch | `/v1/request` | the page body as plain text - **POST only**, see below |
+| AI Visibility (GEO) | `/v1/geo/visibility`, `/v1/geo/jobs/{job_id}` | async job: `POST` starts it, `GET` polls `summary` and `results[]` - see below |
 
 Full parameter and response-field reference for each endpoint, including
 optional headers like `X-Proxy-Location` (geo-target) and `X-User-Agent`
@@ -122,6 +123,29 @@ scripts, and boilerplate that would otherwise dominate the tokens. Note that
 markdown output escapes literal periods in decimals (`29\.1`), so strip
 backslashes before substring-matching a number in the response.
 
+**Gotcha:** AI Visibility (GEO) is asynchronous. `POST /v1/geo/visibility` with 1-5
+`keywords` (the prompts a user would ask an AI assistant, up to 500 chars each)
+answers `202` with a `job_id`; then poll the free `GET /v1/geo/jobs/{job_id}`
+every 5-10 s until `status` is `done` (or `failed`):
+
+```bash
+curl --request POST \
+  --header 'X-Api-Key: YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"keywords":["best web scraping api"],"provider":"all","brand":"Serply","url":"serply.io","competitors":["serpapi.com"],"country":"us"}' \
+  'https://api.serply.io/v1/geo/visibility'
+
+curl --header 'X-Api-Key: YOUR_API_KEY' \
+  'https://api.serply.io/v1/geo/jobs/JOB_ID'
+```
+
+`provider` is `all` (default), `tool` (direct model API), `claude` (Claude Code),
+`codex` (Codex CLI), or a list; `gemini` answers `422` for now. Cost is 10
+credits per provider selected (`all` = 30) for up to 5 keywords; polling is
+free. `tool` takes about 15 s, the CLI engines up to a few minutes. The done
+job has `summary.visibility_score` (0-100), `by_provider`, `mentioned_in`,
+`cited_in`, and `results[]` with `answer`, `citations[]`, and per-run `analysis`.
+
 **Gotcha:** `related_questions` (Google's "People also ask" box) is filled
 only when Google's page includes that box, and the page layout Serply fetches
 often does not, so expect it empty on many queries. What usually populates
@@ -155,7 +179,7 @@ claude mcp add --transport http serply https://api.serply.io/mcp \
 For clients without native remote-MCP support, bridge with `mcp-remote` in
 the client's MCP config, setting the same header.
 
-Fourteen tools, called as `serply:tool_name`:
+Sixteen tools, called as `serply:tool_name`:
 
 - `serply:google_search` - query, num, start, proxy_location, device
 - `serply:bing_search` - query, proxy_location, device
@@ -171,6 +195,8 @@ Fourteen tools, called as `serply:tool_name`:
 - `serply:reddit_user_posts` - username, limit, sort, t, after
 - `serply:reddit_post` - post_id, with_comments, sort, max_depth
 - `serply:reddit_post_comments` - post_id, sort, max_depth
+- `serply:ai_visibility_start` - keywords, provider, brand, url, competitors, country
+- `serply:ai_visibility_job` - job_id
 
 Everything except `google_maps_search` returns rendered markdown rather than
 JSON - readable as-is, no parsing step. Maps returns a structured object with
